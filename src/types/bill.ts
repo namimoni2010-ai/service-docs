@@ -71,6 +71,6 @@ export const COMPANY_DETAILS = {
   address: '4/58E, Salem Attur Main Road, Kothampadi, Attur',
   city: 'Salem Dist, Tamil Nadu – 636109',
   phone: '9626176768',
-  gstin: '',
-  pan: '',
+  gstin: '33DZYPK8024G12Y',
+  pan: 'DZYPK8024G',
 };

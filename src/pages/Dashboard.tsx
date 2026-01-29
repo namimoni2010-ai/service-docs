@@ -186,22 +186,36 @@ export default function Dashboard() {
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer animate-slide-in" onClick={() => navigate('/create-bill')}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer animate-slide-in" onClick={() => navigate('/create-sales-bill')}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-primary" />
+                  <Receipt className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Create New Bill</CardTitle>
-                  <CardDescription>Generate sales & service bill PDF</CardDescription>
+                  <CardTitle>Create Sales Bill</CardTitle>
+                  <CardDescription>Generate sales bill PDF</CardDescription>
                 </div>
               </div>
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer animate-slide-in" style={{ animationDelay: '0.1s' }} onClick={() => navigate('/bills')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer animate-slide-in" style={{ animationDelay: '0.1s' }} onClick={() => navigate('/create-service-bill')}>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Create Service Bill</CardTitle>
+                  <CardDescription>Generate service bill PDF</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer animate-slide-in" style={{ animationDelay: '0.2s' }} onClick={() => navigate('/bills')}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center">
