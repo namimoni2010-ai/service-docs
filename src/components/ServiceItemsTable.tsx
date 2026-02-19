@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +13,10 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
     const newItem: ServiceItem = {
       sno: items.length + 1,
       description: '',
+      hsnCode: '87141090',
       quantity: 1,
       rate: 0,
+      gst: 0,
       amount: 0,
     };
     onChange([...items, newItem]);
@@ -27,7 +28,6 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
       
       const updatedItem = { ...item, [field]: value };
       
-      // Recalculate amount if quantity or rate changes
       if (field === 'quantity' || field === 'rate') {
         const qty = field === 'quantity' ? Number(value) : item.quantity;
         const rate = field === 'rate' ? Number(value) : item.rate;
@@ -52,34 +52,44 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
         <table className="w-full">
           <thead>
             <tr className="bg-primary text-primary-foreground">
-              <th className="px-3 py-3 text-left text-sm font-semibold w-12">S.No</th>
-              <th className="px-3 py-3 text-left text-sm font-semibold">Service Description</th>
-              <th className="px-3 py-3 text-center text-sm font-semibold w-20">Qty</th>
-              <th className="px-3 py-3 text-right text-sm font-semibold w-28">Rate (₹)</th>
-              <th className="px-3 py-3 text-right text-sm font-semibold w-28">Amount (₹)</th>
-              <th className="px-3 py-3 text-center text-sm font-semibold w-16">Action</th>
+              <th className="px-2 py-3 text-left text-sm font-semibold w-12">S.No</th>
+              <th className="px-2 py-3 text-left text-sm font-semibold">Item Description</th>
+              <th className="px-2 py-3 text-center text-sm font-semibold w-24">HSN Code</th>
+              <th className="px-2 py-3 text-center text-sm font-semibold w-16">Qty</th>
+              <th className="px-2 py-3 text-right text-sm font-semibold w-24">Price (₹)</th>
+              <th className="px-2 py-3 text-center text-sm font-semibold w-16">GST %</th>
+              <th className="px-2 py-3 text-right text-sm font-semibold w-24">Amount (₹)</th>
+              <th className="px-2 py-3 text-center text-sm font-semibold w-12">Action</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                  No service items added. Click "Add Service Item" to begin.
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  No items added. Click "Add Item" to begin.
                 </td>
               </tr>
             ) : (
               items.map((item, index) => (
                 <tr key={index} className="border-b border-border hover:bg-muted/50">
-                  <td className="px-3 py-2 text-center font-medium">{item.sno}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-2 text-center font-medium">{item.sno}</td>
+                  <td className="px-2 py-2">
                     <Input
                       value={item.description}
                       onChange={(e) => updateItem(index, 'description', e.target.value)}
-                      placeholder="Enter service description"
+                      placeholder="Enter item description"
                       className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0"
                     />
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-2">
+                    <Input
+                      value={item.hsnCode}
+                      onChange={(e) => updateItem(index, 'hsnCode', e.target.value)}
+                      placeholder="HSN Code"
+                      className="text-center border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-full"
+                    />
+                  </td>
+                  <td className="px-2 py-2">
                     <Input
                       type="number"
                       min="1"
@@ -88,7 +98,7 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
                       className="text-center border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-full"
                     />
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-2">
                     <Input
                       type="number"
                       min="0"
@@ -98,10 +108,20 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
                       className="text-right border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-full"
                     />
                   </td>
-                  <td className="px-3 py-2 text-right font-medium">
+                  <td className="px-2 py-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={item.gst}
+                      onChange={(e) => updateItem(index, 'gst', Number(e.target.value))}
+                      className="text-center border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-full"
+                    />
+                  </td>
+                  <td className="px-2 py-2 text-right font-medium">
                     ₹{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-3 py-2 text-center">
+                  <td className="px-2 py-2 text-center">
                     <Button
                       type="button"
                       variant="ghost"
@@ -121,7 +141,7 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
       
       <Button type="button" variant="outline" onClick={addItem} className="w-full">
         <Plus className="w-4 h-4 mr-2" />
-        Add Service Item
+        Add Item
       </Button>
     </div>
   );

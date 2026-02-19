@@ -1,0 +1,8 @@
+
+ALTER TABLE public.sales_bills 
+ADD COLUMN IF NOT EXISTS controller_number TEXT,
+ADD COLUMN IF NOT EXISTS battery_number TEXT,
+ADD COLUMN IF NOT EXISTS charger_number TEXT,
+ADD COLUMN IF NOT EXISTS customer_pan TEXT,
+ADD COLUMN IF NOT EXISTS customer_gst TEXT,
+ADD COLUMN IF NOT EXISTS trade_certificate_no TEXT DEFAULT 'TNS91A0009TC';
