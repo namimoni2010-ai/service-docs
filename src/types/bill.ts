@@ -1,8 +1,10 @@
 export interface ServiceItem {
   sno: number;
   description: string;
+  hsnCode: string;
   quantity: number;
   rate: number;
+  gst: number;
   amount: number;
 }
 
@@ -16,13 +18,18 @@ export interface SalesBillData {
   customerAddress: string;
   customerMobile: string;
   customerState: string;
+  customerPan: string;
+  customerGst: string;
   
-  // Vehicle details (Admin only)
+  // Vehicle details
   vehicleModel: string;
   vehicleColor: string;
   hsnSacCode: string;
   chassisNumber: string;
   motorNumber: string;
+  controllerNumber: string;
+  batteryNumber: string;
+  chargerNumber: string;
   
   // Pricing
   taxablePrice: number;
@@ -40,20 +47,24 @@ export interface SalesBillData {
 }
 
 export interface ServiceBillData {
-  // From Sales Bill
   customerName: string;
   customerMobile: string;
+  customerAddress: string;
   vehicleModel: string;
   vehicleNumber: string;
   serviceDate: string;
+  billNumber: string;
   
   // Service items
   serviceItems: ServiceItem[];
   
   // Summary
   subTotal: number;
+  cgstAmount: number;
+  sgstAmount: number;
   gstAmount: number;
   applyGst: boolean;
+  roundedOff: number;
   finalAmount: number;
   
   // Notes
@@ -69,8 +80,9 @@ export interface CompleteBillData {
 export const COMPANY_DETAILS = {
   name: 'PALANI ANDAVAR E MOTORS',
   address: '4/58E, Salem Attur Main Road, Kothampadi, Attur',
-  city: 'Salem Dist, Tamil Nadu – 636109',
+  city: 'SALEM DIST, TAMILNADU – 636109. TEL: 9626176768',
   phone: '9626176768',
-  gstin: '33DZYPK8024G12Y',
+  gstin: '33DZYPK8024G1ZY',
   pan: 'DZYPK8024G',
+  tradeCertificateNo: 'TNS91A0009TC',
 };

@@ -47,13 +47,18 @@ export type Database = {
           battery_chemistry: string | null
           battery_make: string | null
           battery_manufacturing_year: string | null
+          battery_number: string | null
           cgst_amount: number
+          charger_number: string | null
           chassis_number: string
+          controller_number: string | null
           created_at: string
           created_by: string
           customer_address: string
+          customer_gst: string | null
           customer_mobile: string
           customer_name: string
+          customer_pan: string | null
           customer_state: string
           ex_showroom_price: number
           hsn_sac_code: string
@@ -65,6 +70,7 @@ export type Database = {
           sgst_amount: number
           taxable_price: number
           total_invoice_amount: number
+          trade_certificate_no: string | null
           updated_at: string
           vehicle_color: string
           vehicle_model: string
@@ -74,13 +80,18 @@ export type Database = {
           battery_chemistry?: string | null
           battery_make?: string | null
           battery_manufacturing_year?: string | null
+          battery_number?: string | null
           cgst_amount: number
+          charger_number?: string | null
           chassis_number: string
+          controller_number?: string | null
           created_at?: string
           created_by: string
           customer_address: string
+          customer_gst?: string | null
           customer_mobile: string
           customer_name: string
+          customer_pan?: string | null
           customer_state: string
           ex_showroom_price: number
           hsn_sac_code: string
@@ -92,6 +103,7 @@ export type Database = {
           sgst_amount: number
           taxable_price: number
           total_invoice_amount: number
+          trade_certificate_no?: string | null
           updated_at?: string
           vehicle_color: string
           vehicle_model: string
@@ -101,13 +113,18 @@ export type Database = {
           battery_chemistry?: string | null
           battery_make?: string | null
           battery_manufacturing_year?: string | null
+          battery_number?: string | null
           cgst_amount?: number
+          charger_number?: string | null
           chassis_number?: string
+          controller_number?: string | null
           created_at?: string
           created_by?: string
           customer_address?: string
+          customer_gst?: string | null
           customer_mobile?: string
           customer_name?: string
+          customer_pan?: string | null
           customer_state?: string
           ex_showroom_price?: number
           hsn_sac_code?: string
@@ -119,6 +136,7 @@ export type Database = {
           sgst_amount?: number
           taxable_price?: number
           total_invoice_amount?: number
+          trade_certificate_no?: string | null
           updated_at?: string
           vehicle_color?: string
           vehicle_model?: string

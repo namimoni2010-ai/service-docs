@@ -14,18 +14,14 @@ import { generateServiceBillPDF } from '@/lib/pdfGeneratorService';
 import { ServiceBillData, ServiceItem } from '@/types/bill';
 import { useToast } from '@/hooks/use-toast';
 import gauraLogo from '@/assets/gaura-logo.jpg';
-import { 
-  ArrowLeft, 
-  Download, 
-  Wrench,
-  FileText,
-} from 'lucide-react';
+import { ArrowLeft, Download, Wrench, FileText } from 'lucide-react';
 
 interface SalesBillOption {
   id: string;
   invoice_number: string;
   customer_name: string;
   customer_mobile: string;
+  customer_address: string;
   vehicle_model: string;
 }
 
@@ -38,39 +34,30 @@ export default function CreateServiceBill() {
   const [salesBills, setSalesBills] = useState<SalesBillOption[]>([]);
   const [selectedSalesBill, setSelectedSalesBill] = useState<SalesBillOption | null>(null);
 
-  // Service Bill State
-  const [serviceBill, setServiceBill] = useState<{
-    vehicleNumber: string;
-    serviceDate: string;
-    serviceItems: ServiceItem[];
-    applyGst: boolean;
-    serviceNotes: string;
-    nextServiceDate: string;
-  }>({
+  const [serviceBill, setServiceBill] = useState({
     vehicleNumber: '',
     serviceDate: new Date().toISOString().split('T')[0],
-    serviceItems: [],
+    billNumber: '',
+    serviceItems: [] as ServiceItem[],
     applyGst: false,
+    roundedOff: 0,
     serviceNotes: '',
     nextServiceDate: '',
   });
 
-  // Calculated values
   const serviceCalculations = useMemo(() => {
     const subTotal = serviceBill.serviceItems.reduce((sum, item) => sum + item.amount, 0);
-    const gstAmount = serviceBill.applyGst ? subTotal * 0.18 : 0;
-    const finalAmount = subTotal + gstAmount;
-
-    return { subTotal, gstAmount, finalAmount };
-  }, [serviceBill.serviceItems, serviceBill.applyGst]);
+    const cgstAmount = serviceBill.applyGst ? subTotal * 0.09 : 0;
+    const sgstAmount = serviceBill.applyGst ? subTotal * 0.09 : 0;
+    const gstAmount = cgstAmount + sgstAmount;
+    const rounded = Number(serviceBill.roundedOff) || 0;
+    const finalAmount = subTotal + gstAmount + rounded;
+    return { subTotal, cgstAmount, sgstAmount, gstAmount, finalAmount };
+  }, [serviceBill.serviceItems, serviceBill.applyGst, serviceBill.roundedOff]);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-    if (!loading && user && !isAdmin) {
-      navigate('/dashboard');
-    }
+    if (!loading && !user) navigate('/auth');
+    if (!loading && user && !isAdmin) navigate('/dashboard');
   }, [user, loading, isAdmin, navigate]);
 
   useEffect(() => {
@@ -83,9 +70,7 @@ export default function CreateServiceBill() {
       const response = await fetch(gauraLogo);
       const blob = await response.blob();
       const reader = new FileReader();
-      reader.onload = () => {
-        setLogoBase64(reader.result as string);
-      };
+      reader.onload = () => setLogoBase64(reader.result as string);
       reader.readAsDataURL(blob);
     } catch (e) {
       console.error('Failed to load logo:', e);
@@ -95,12 +80,9 @@ export default function CreateServiceBill() {
   const loadSalesBills = async () => {
     const { data, error } = await supabase
       .from('sales_bills')
-      .select('id, invoice_number, customer_name, customer_mobile, vehicle_model')
+      .select('id, invoice_number, customer_name, customer_mobile, customer_address, vehicle_model')
       .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setSalesBills(data);
-    }
+    if (!error && data) setSalesBills(data);
   };
 
   const handleSalesBillSelect = (billId: string) => {
@@ -108,33 +90,22 @@ export default function CreateServiceBill() {
     setSelectedSalesBill(bill || null);
   };
 
-  const handleServiceBillChange = (field: string, value: string | boolean | ServiceItem[]) => {
+  const handleChange = (field: string, value: string | boolean | number | ServiceItem[]) => {
     setServiceBill(prev => ({ ...prev, [field]: value }));
   };
 
   const handleGeneratePDF = async () => {
     if (!selectedSalesBill) {
-      toast({
-        title: 'Select Sales Bill',
-        description: 'Please select a sales bill to link this service bill.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Select Sales Bill', description: 'Please select a sales bill.', variant: 'destructive' });
       return;
     }
-
     if (serviceBill.serviceItems.length === 0) {
-      toast({
-        title: 'Add Service Items',
-        description: 'Please add at least one service item.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Add Items', description: 'Please add at least one item.', variant: 'destructive' });
       return;
     }
 
     setSaving(true);
-
     try {
-      // Save service bill to database
       const serviceData = {
         sales_bill_id: selectedSalesBill.id,
         service_date: serviceBill.serviceDate,
@@ -149,22 +120,21 @@ export default function CreateServiceBill() {
         created_by: user!.id,
       };
       
-      const { error: serviceError } = await supabase
-        .from('service_bills')
-        .insert(serviceData);
-
+      const { error: serviceError } = await supabase.from('service_bills').insert(serviceData);
       if (serviceError) throw serviceError;
 
-      // Generate PDF
       const completeServiceBill: ServiceBillData = {
         customerName: selectedSalesBill.customer_name,
         customerMobile: selectedSalesBill.customer_mobile,
+        customerAddress: selectedSalesBill.customer_address || '',
         vehicleModel: selectedSalesBill.vehicle_model,
         vehicleNumber: serviceBill.vehicleNumber,
         serviceDate: serviceBill.serviceDate,
+        billNumber: serviceBill.billNumber,
         serviceItems: serviceBill.serviceItems,
         ...serviceCalculations,
         applyGst: serviceBill.applyGst,
+        roundedOff: serviceBill.roundedOff,
         serviceNotes: serviceBill.serviceNotes,
         nextServiceDate: serviceBill.nextServiceDate,
       };
@@ -172,44 +142,30 @@ export default function CreateServiceBill() {
       const pdf = generateServiceBillPDF(completeServiceBill, logoBase64);
       pdf.save(`ServiceBill_${selectedSalesBill.invoice_number}.pdf`);
 
-      toast({
-        title: 'Service Bill Generated!',
-        description: 'Your PDF has been downloaded.',
-      });
-
+      toast({ title: 'Service Bill Generated!', description: 'Your PDF has been downloaded.' });
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error saving bill:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save bill. Please try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message || 'Failed to save bill.', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Loading...</div></div>;
   }
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              <ArrowLeft className="w-4 h-4 mr-2" />Back
             </Button>
             <div className="hidden sm:block">
-              <h1 className="font-bold text-foreground">Create Service Bill</h1>
+              <h1 className="font-bold text-foreground">Create Service Bill (Spares)</h1>
               <p className="text-sm text-muted-foreground">
                 {selectedSalesBill ? `For: ${selectedSalesBill.customer_name}` : 'Select a customer'}
               </p>
@@ -226,19 +182,14 @@ export default function CreateServiceBill() {
         {/* Select Sales Bill */}
         <Card className="animate-fade-in">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="w-5 h-5 text-primary" />
-              Select Customer / Sales Bill
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><FileText className="w-5 h-5 text-primary" />Select Customer / Sales Bill</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Sales Bill *</Label>
                 <Select onValueChange={handleSalesBillSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a sales bill" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a sales bill" /></SelectTrigger>
                   <SelectContent>
                     {salesBills.map((bill) => (
                       <SelectItem key={bill.id} value={bill.id}>
@@ -248,22 +199,12 @@ export default function CreateServiceBill() {
                   </SelectContent>
                 </Select>
               </div>
-
               {selectedSalesBill && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Customer:</span>
-                      <span className="ml-2 font-medium">{selectedSalesBill.customer_name}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Mobile:</span>
-                      <span className="ml-2 font-medium">{selectedSalesBill.customer_mobile}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Vehicle:</span>
-                      <span className="ml-2 font-medium">{selectedSalesBill.vehicle_model}</span>
-                    </div>
+                    <div><span className="text-muted-foreground">Customer:</span><span className="ml-2 font-medium">{selectedSalesBill.customer_name}</span></div>
+                    <div><span className="text-muted-foreground">Mobile:</span><span className="ml-2 font-medium">{selectedSalesBill.customer_mobile}</span></div>
+                    <div><span className="text-muted-foreground">Vehicle:</span><span className="ml-2 font-medium">{selectedSalesBill.vehicle_model}</span></div>
                   </div>
                 </div>
               )}
@@ -274,95 +215,63 @@ export default function CreateServiceBill() {
         {/* Service Details */}
         <Card className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Wrench className="w-5 h-5 text-primary" />
-              Service Details
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><Wrench className="w-5 h-5 text-primary" />Service Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Vehicle Number</Label>
-                <Input
-                  value={serviceBill.vehicleNumber}
-                  onChange={(e) => handleServiceBillChange('vehicleNumber', e.target.value)}
-                  placeholder="e.g., TN 30 AB 1234"
-                />
+                <Label>Bill Number</Label>
+                <Input value={serviceBill.billNumber} onChange={(e) => handleChange('billNumber', e.target.value)} placeholder="e.g., 60" />
               </div>
               <div className="space-y-2">
                 <Label>Service Date</Label>
-                <Input
-                  type="date"
-                  value={serviceBill.serviceDate}
-                  onChange={(e) => handleServiceBillChange('serviceDate', e.target.value)}
-                />
+                <Input type="date" value={serviceBill.serviceDate} onChange={(e) => handleChange('serviceDate', e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Next Service Date</Label>
-                <Input
-                  type="date"
-                  value={serviceBill.nextServiceDate}
-                  onChange={(e) => handleServiceBillChange('nextServiceDate', e.target.value)}
-                />
+                <Label>Vehicle Number</Label>
+                <Input value={serviceBill.vehicleNumber} onChange={(e) => handleChange('vehicleNumber', e.target.value)} placeholder="e.g., TN 30 AB 1234" />
               </div>
             </div>
 
-            {/* Service Items Table */}
             <div className="space-y-2">
               <Label>Service Items</Label>
-              <ServiceItemsTable
-                items={serviceBill.serviceItems}
-                onChange={(items) => handleServiceBillChange('serviceItems', items)}
-              />
+              <ServiceItemsTable items={serviceBill.serviceItems} onChange={(items) => handleChange('serviceItems', items)} />
             </div>
 
-            {/* Service Summary */}
             {serviceBill.serviceItems.length > 0 && (
-              <div className="bg-invoice-section rounded-lg p-4 space-y-3 max-w-md ml-auto">
-                <div className="flex justify-between">
-                  <span>Sub Total:</span>
-                  <span>₹{serviceCalculations.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3 max-w-md ml-auto">
+                <div className="flex justify-between"><span>Sub Total:</span><span>₹{serviceCalculations.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Switch
-                      checked={serviceBill.applyGst}
-                      onCheckedChange={(checked) => handleServiceBillChange('applyGst', checked)}
-                    />
-                    <span>Apply GST (18%)</span>
+                    <Switch checked={serviceBill.applyGst} onCheckedChange={(checked) => handleChange('applyGst', checked)} />
+                    <span>Apply GST (C.GST 9% + S.GST 9%)</span>
                   </div>
-                  <span>₹{serviceCalculations.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+                {serviceBill.applyGst && (
+                  <>
+                    <div className="flex justify-between text-sm"><span>C.GST 9%:</span><span>₹{serviceCalculations.cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+                    <div className="flex justify-between text-sm"><span>S.GST 9%:</span><span>₹{serviceCalculations.sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+                  </>
+                )}
+                <div className="space-y-2">
+                  <Label className="text-sm">Round Off (₹)</Label>
+                  <Input type="number" step="0.01" value={serviceBill.roundedOff || ''} onChange={(e) => handleChange('roundedOff', Number(e.target.value))} placeholder="0.00" />
                 </div>
                 <div className="border-t border-border pt-3">
-                  <div className="flex justify-between font-bold text-lg text-primary">
-                    <span>Final Amount:</span>
-                    <span>₹{serviceCalculations.finalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                  </div>
+                  <div className="flex justify-between font-bold text-lg text-primary"><span>Total:</span><span>₹{serviceCalculations.finalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
                 </div>
               </div>
             )}
 
-            {/* Service Notes */}
             <div className="space-y-2">
               <Label>Service Notes / Remarks</Label>
-              <Textarea
-                value={serviceBill.serviceNotes}
-                onChange={(e) => handleServiceBillChange('serviceNotes', e.target.value)}
-                placeholder="Enter any service notes or remarks..."
-                className="min-h-[100px]"
-              />
+              <Textarea value={serviceBill.serviceNotes} onChange={(e) => handleChange('serviceNotes', e.target.value)} placeholder="Enter any service notes..." className="min-h-[100px]" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Generate Button (Mobile Sticky) */}
         <div className="fixed bottom-4 left-4 right-4 md:relative md:bottom-auto md:left-auto md:right-auto">
-          <Button 
-            onClick={handleGeneratePDF} 
-            disabled={saving || !selectedSalesBill} 
-            className="w-full md:w-auto gap-2 h-12 text-lg shadow-lg md:shadow-none"
-            size="lg"
-          >
+          <Button onClick={handleGeneratePDF} disabled={saving || !selectedSalesBill} className="w-full md:w-auto gap-2 h-12 text-lg shadow-lg md:shadow-none" size="lg">
             <Download className="w-5 h-5" />
             {saving ? 'Generating PDF...' : 'Generate & Download PDF'}
           </Button>
