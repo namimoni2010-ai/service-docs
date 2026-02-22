@@ -363,6 +363,14 @@ export default function CreateSalesBill() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Create Bill Button */}
+        <div className="sticky bottom-4 z-10">
+          <Button onClick={handleGeneratePDF} disabled={saving} className="w-full gap-2 h-12 text-lg shadow-lg" size="lg">
+            <FileText className="w-5 h-5" />
+            {saving ? 'Creating Bill...' : 'Create Sales Bill & Download PDF'}
+          </Button>
+        </div>
       </main>
     </div>
   );
