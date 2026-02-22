@@ -48,29 +48,27 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-primary text-primary-foreground">
-              <th className="px-2 py-3 text-left text-sm font-semibold w-12">S.No</th>
-              <th className="px-2 py-3 text-left text-sm font-semibold">Item Description</th>
-              <th className="px-2 py-3 text-center text-sm font-semibold w-24">HSN Code</th>
-              <th className="px-2 py-3 text-center text-sm font-semibold w-16">Qty</th>
-              <th className="px-2 py-3 text-right text-sm font-semibold w-24">Price (₹)</th>
-              <th className="px-2 py-3 text-center text-sm font-semibold w-16">GST %</th>
-              <th className="px-2 py-3 text-right text-sm font-semibold w-24">Amount (₹)</th>
-              <th className="px-2 py-3 text-center text-sm font-semibold w-12">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                  No items added. Click "Add Item" to begin.
-                </td>
+      {items.length === 0 ? (
+        <div className="rounded-lg border border-border px-4 py-8 text-center text-muted-foreground">
+          No items added. Click "Add Item" to begin.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-primary text-primary-foreground">
+                <th className="px-2 py-3 text-left text-sm font-semibold w-12">S.No</th>
+                <th className="px-2 py-3 text-left text-sm font-semibold">Item Description</th>
+                <th className="px-2 py-3 text-center text-sm font-semibold w-24">HSN Code</th>
+                <th className="px-2 py-3 text-center text-sm font-semibold w-16">Qty</th>
+                <th className="px-2 py-3 text-right text-sm font-semibold w-24">Price (₹)</th>
+                <th className="px-2 py-3 text-center text-sm font-semibold w-16">GST %</th>
+                <th className="px-2 py-3 text-right text-sm font-semibold w-24">Amount (₹)</th>
+                <th className="px-2 py-3 text-center text-sm font-semibold w-12">Action</th>
               </tr>
-            ) : (
-              items.map((item, index) => (
+            </thead>
+            <tbody>
+              {items.map((item, index) => (
                 <tr key={index} className="border-b border-border hover:bg-muted/50">
                   <td className="px-2 py-2 text-center font-medium">{item.sno}</td>
                   <td className="px-2 py-2">
@@ -133,11 +131,11 @@ export function ServiceItemsTable({ items, onChange }: ServiceItemsTableProps) {
                     </Button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       
       <Button type="button" variant="outline" onClick={addItem} className="w-full">
         <Plus className="w-4 h-4 mr-2" />

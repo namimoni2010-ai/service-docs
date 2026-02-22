@@ -270,10 +270,10 @@ export default function CreateServiceBill() {
           </CardContent>
         </Card>
 
-        <div className="fixed bottom-4 left-4 right-4 md:relative md:bottom-auto md:left-auto md:right-auto">
-          <Button onClick={handleGeneratePDF} disabled={saving || !selectedSalesBill} className="w-full md:w-auto gap-2 h-12 text-lg shadow-lg md:shadow-none" size="lg">
-            <Download className="w-5 h-5" />
-            {saving ? 'Generating PDF...' : 'Generate & Download PDF'}
+        <div className="sticky bottom-4 z-10">
+          <Button onClick={handleGeneratePDF} disabled={saving || !selectedSalesBill} className="w-full gap-2 h-12 text-lg shadow-lg" size="lg">
+            <FileText className="w-5 h-5" />
+            {saving ? 'Creating Bill...' : 'Create Service Bill & Download PDF'}
           </Button>
         </div>
       </main>

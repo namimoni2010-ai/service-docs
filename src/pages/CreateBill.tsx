@@ -358,6 +358,14 @@ export default function CreateBill() {
             <div className="space-y-2"><Label>Service Notes</Label><Textarea value={serviceBill.serviceNotes} onChange={(e) => handleServiceBillChange('serviceNotes', e.target.value)} placeholder="Enter service notes..." className="min-h-[80px]" /></div>
           </CardContent>
         </Card>
+
+        {/* Create Bill Button */}
+        <div className="sticky bottom-4 z-10">
+          <Button onClick={handleGeneratePDF} disabled={saving} className="w-full gap-2 h-12 text-lg shadow-lg" size="lg">
+            <FileText className="w-5 h-5" />
+            {saving ? 'Creating Bill...' : 'Create Bill & Download PDF'}
+          </Button>
+        </div>
       </main>
     </div>
   );
